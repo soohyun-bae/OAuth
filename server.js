@@ -60,4 +60,20 @@ app.post('/naver/userInfo', (req, res) => {
   .then(response => res.json(response.data.response))
 })
 
+app.delete('/kakao/logout', (req, res) => {
+  const {kakaoAccessToken} = req.body
+  axios.post('https://kapi.kakao.com/v1/user/logout', {}, {
+    headers: {
+      Authorization : `Bearer ${kakaoAccessToken}`
+    }
+  })
+  .then(response => res.send('로그아웃 성공'))
+})
+
+app.delete('/naver/logout', (req, res) => {
+  const {naverAccessToken} = req.body
+  axios.post(`https://nid.naver.com/oauth2.0/token?grant_type=delete&client_id=${naverClientId}&client_secret=${naverClientSecret}&access_token=${naverAccessToken}&service_provider=NAVER`)
+  .then(response => res.send('로그아웃 성공'))
+})
+
 app.listen(3000, () => console.log('서버 열림'))

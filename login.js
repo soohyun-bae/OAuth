@@ -1,8 +1,11 @@
+
 const kakaoLoginButton = document.querySelector('#kakao')
 const naverLoginButton = document.querySelector('#naver')
 const userImage = document.querySelector('img')
 const userName = document.querySelector('#user_name')
 const logoutButton = document.querySelector('#logout_button')
+
+let currentOAuthService = ''
 
 const kakaoClientId = 'fcf63c4854456897230ba97b45beb8ba'
 const redirectURI = 'http://localhost:5500'
@@ -36,19 +39,43 @@ window.onload = () => {
   if (authorizationCode) {
     if (naverState) {
       axios.post('http://localhost:3000/naver/login', { authorizationCode })
-      .then(res => {
-        naverAccessToken = res.data
-        return axios.post('http://localhost:3000/naver/userInfo', {naverAccessToken})
-      })
-      .then(res => renderUserInfo(res.data.profile_image, res.data.name))
+        .then(res => {
+          naverAccessToken = res.data
+          return axios.post('http://localhost:3000/naver/userInfo', { naverAccessToken })
+        })
+        .then(res => {
+          renderUserInfo(res.data.profile_image, res.data.name)
+          currentOAuthService = 'naver'
+        })
     } else {
       axios.post('http://localhost:3000/kakao/login', { authorizationCode })
         .then(res => {
           kakaoAccessToken = res.data
           return axios.post('http://localhost:3000/kakao/userInfo', { kakaoAccessToken })
         })
-        .then(res => renderUserInfo(res.data.profile_image, res.data.nickname))
+        .then(res => {
+          renderUserInfo(res.data.profile_image, res.data.nickname)
+          currentOAuthService = 'kakao'
+        })
     }
   }
+}
 
+logoutButton.onclick = () => {
+  if (currentOAuthService === 'kakao') {
+    axios.delete('http://localhost:3000/kakao/logout', {
+      data: { kakaoAccessToken }
+    })
+      .then(res => {
+        {
+          console.log(res.data)
+          renderUserInfo('', '')
+        }
+      })
+  } else if (currentOAuthService === 'naver') {
+    axios.delete('http://localhost:3000/naver/logout', {
+      data: { naverAccessToken }
+    })
+      .then(res => renderUserInfo('', ''))
+  }
 }

@@ -9,6 +9,9 @@ const naverClientId = 'cBtroufVBR0aZjUnYreJ'
 const naverClientSecret = 'CtLnPRSobt'
 const naverSecret = 'it_is_me'
 
+const googleClientId = '1031200764429-v26f2pc6nv0o1gnkt1q6j5sp32e14jrp.apps.googleusercontent.com'
+const googleClientSecret = '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'
+
 const app = express()
 
 app.use(cors({
@@ -39,6 +42,12 @@ app.post('/naver/login', (req, res) => {
   .then(response => res.send(response.data.access_token))
 })
 
+app.post('/google/login', (req, res) => {
+  const authorizationCode = req.body.authorizationCode
+  axios.post(`https://oauth2.googleapis.com/token?client_id=${googleClientId}&client_secret=${googleClientSecret}&code=${authorizationCode}&grant_type=authorization_code&redirect_uri=${redirectURI}`)
+  .then(response => res.send(response.data.access_token))
+})
+
 app.post('/kakao/userInfo', (req, res) => {
   const {kakaoAccessToken} = req.body
   axios.get('https://kapi.kakao.com/v2/user/me', {
@@ -60,6 +69,16 @@ app.post('/naver/userInfo', (req, res) => {
   .then(response => res.json(response.data.response))
 })
 
+app.post('/google/userInfo', (req, res) => {
+  const {googleAccessToken} = req.body
+  axios.get(`https://www.googleapis.com/oauth2/v2/userinfo`, {
+    headers:{
+      Authorization: `Bearer ${googleAccessToken}`
+    }
+  })
+  .then(response => res.send(response.data))
+})
+
 app.delete('/kakao/logout', (req, res) => {
   const {kakaoAccessToken} = req.body
   axios.post('https://kapi.kakao.com/v1/user/logout', {}, {
@@ -76,4 +95,13 @@ app.delete('/naver/logout', (req, res) => {
   .then(response => res.send('로그아웃 성공'))
 })
 
+app.delete('/google/logout', (req, res) => {
+  const {googleAccessToken} = req.body
+  axios.post('https://oauth2.googleapis.com/revoke', null, {
+    params: {
+      token: googleAccessToken
+    }
+  })
+  .then(response => res.send('로그아웃 성공'))
+})
 app.listen(3000, () => console.log('서버 열림'))
